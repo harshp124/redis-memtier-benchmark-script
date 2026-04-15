@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memtier Workbench</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --ink: #18212b;
+      --muted: #5b6773;
+      --line: #d8e0e8;
+      --accent: #0f766e;
+      --accent-soft: #ecfdf5;
+      --code: #0f172a;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 14px;
+      --mono: "SFMono-Regular", "Menlo", "Consolas", monospace;
+      --sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .header {
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+    }
+
+    .header p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .panel h2 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    .panel p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .hidden { display: none; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .field {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fbfdff;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .field small {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="password"],
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    .code-box {
+      position: sticky;
+      top: 20px;
+      background: var(--code);
+      color: #e2e8f0;
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .code-box h3 {
+      margin: 0 0 10px;
+      color: #fff;
+      font-size: 16px;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .button {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .help-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .help-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .help-item strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .help-item p {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .upload-grid,
+    .metrics,
+    .charts {
+      display: grid;
+      gap: 14px;
+    }
+
+    .upload-grid {
+      grid-template-columns: 1fr 1fr;
+      margin-top: 16px;
+    }
+
+    .drop {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      background: #fbfdff;
+    }
+
+    .metrics {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 16px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .metric span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 22px;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .metric small {
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .charts {
+      grid-template-columns: 1fr 1fr;
+      margin-top: 16px;
+    }
+
+    .chart {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .chart h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+    }
+
+    .svg-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    th {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      background: #f8fafc;
+    }
+
+    .status {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    @media (max-width: 980px) {
+      .layout,
+      .upload-grid,
+      .metrics,
+      .charts,
+      .fields {
+        grid-template-columns: 1fr;
+      }
+
+      .code-box {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <h1>Memtier Workbench</h1>
+      <p>Build a command or load memtier output.</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="builder">Command Builder</button>
+      <button class="tab" data-tab="viewer">Output Viewer</button>
+    </div>
+
+    <section id="builderTab">
+      <div class="layout">
+        <div>
+          <div class="panel">
+            <h2>Command Builder</h2>
+            <p>Set the parameters you want. Copy the generated command.</p>
+
+            <div class="fields">
+              <div class="field">
+                <label for="host">Host</label>
+                <input id="host" type="text" value="127.0.0.1">
+                <small>Redis hostname or IP.</small>
+              </div>
+              <div class="field">
+                <label for="port">Port</label>
+                <input id="port" type="number" value="6379" min="1" max="65535">
+                <small>Redis port.</small>
+              </div>
+
+              <div class="field">
+                <label for="password">Password</label>
+                <input id="password" type="password" placeholder="Optional">
+                <small>Uses <code>--authenticate</code> if set.</small>
+              </div>
+              <div class="field">
+                <label for="protocol">Protocol</label>
+                <select id="protocol">
+                  <option value="redis" selected>redis</option>
+                  <option value="resp2">resp2</option>
+                  <option value="resp3">resp3</option>
+                </select>
+                <small>Wire protocol.</small>
+              </div>
+
+              <div class="field">
+                <label for="threads">Threads</label>
+                <input id="threads" type="number" value="4" min="1">
+                <small>Benchmark worker threads.</small>
+              </div>
+              <div class="field">
+                <label for="clients">Clients per thread</label>
+                <input id="clients" type="number" value="50" min="1">
+                <small>Total connections = threads × clients.</small>
+              </div>
+
+              <div class="field">
+                <label for="pipeline">Pipeline</label>
+                <input id="pipeline" type="number" value="1" min="1">
+                <small>Keep at 1 for latency-focused tests.</small>
+              </div>
+              <div class="field">
+                <label for="testTime">Test time (seconds)</label>
+                <input id="testTime" type="number" value="60" min="1">
+                <small>Run duration.</small>
+              </div>
+
+              <div class="field">
+                <label for="writePercent">Write percent</label>
+                <input id="writePercent" type="number" value="20" min="0" max="100">
+                <small>Write portion of the workload.</small>
+              </div>
+              <div class="field">
+                <label for="readPercent">Read percent</label>
+                <input id="readPercent" type="number" value="80" min="0" max="100">
+                <small>Read portion of the workload.</small>
+              </div>
+
+              <div class="field">
+                <label for="valueMode">Value mode</label>
+                <select id="valueMode">
+                  <option value="fixed" selected>Fixed size</option>
+                  <option value="range">Range</option>
+                </select>
+                <small>Use fixed size or a range.</small>
+              </div>
+              <div class="field">
+                <label for="avgValueSize">Average value size (bytes)</label>
+                <input id="avgValueSize" type="number" value="1024" min="1">
+                <small>Used as <code>--data-size</code> or range midpoint.</small>
+              </div>
+
+              <div class="field">
+                <label for="valueDelta">Value size delta</label>
+                <input id="valueDelta" type="number" value="128" min="0">
+                <small>Used only in range mode.</small>
+              </div>
+              <div class="field">
+                <label for="valuePattern">Value size pattern</label>
+                <select id="valuePattern">
+                  <option value="R" selected>R</option>
+                  <option value="S">S</option>
+                  <option value="G">G</option>
+                </select>
+                <small>Used with <code>--data-size-range</code>.</small>
+              </div>
+
+              <div class="field">
+                <label for="keyMin">Key minimum</label>
+                <input id="keyMin" type="number" value="1" min="0">
+                <small>Smallest key id.</small>
+              </div>
+              <div class="field">
+                <label for="keyMax">Key maximum</label>
+                <input id="keyMax" type="number" value="1000000" min="1">
+                <small>Largest key id.</small>
+              </div>
+
+              <div class="field">
+                <label for="keyPattern">Key pattern</label>
+                <select id="keyPattern">
+                  <option value="R:R" selected>R:R</option>
+                  <option value="P:P">P:P</option>
+                  <option value="S:S">S:S</option>
+                </select>
+                <small>Key access behavior.</small>
+              </div>
+              <div class="field">
+                <label for="keyPrefix">Key prefix</label>
+                <input id="keyPrefix" type="text" value="memtier">
+                <small>Prefix for generated keys.</small>
+              </div>
+
+              <div class="field">
+                <label for="rateLimiting">Rate limiting</label>
+                <input id="rateLimiting" type="number" value="0" min="0">
+                <small>Ops/sec per connection. 0 means unlimited.</small>
+              </div>
+              <div class="field">
+                <label for="percentiles">Percentiles</label>
+                <input id="percentiles" type="text" value="50,80,90,95,99,99.9">
+                <small>Printed in the stats table.</small>
+              </div>
+
+              <div class="field">
+                <label for="hdrPrefix">HDR file prefix</label>
+                <input id="hdrPrefix" type="text" value="redis_run_01">
+                <small>Used by <code>--hdr-file-prefix</code>.</small>
+              </div>
+              <div class="field">
+                <label for="extraArgs">Extra arguments</label>
+                <input id="extraArgs" type="text" placeholder="Example: --run-count=3">
+                <small>Optional extra flags.</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Parameter Help</h2>
+            <div class="help-list">
+              <div class="help-item">
+                <strong>Threads</strong>
+                <p>Worker threads inside memtier. Not the same as clients.</p>
+              </div>
+              <div class="help-item">
+                <strong>Clients per thread</strong>
+                <p>Connections opened by each thread. Total connections = threads × clients.</p>
+              </div>
+              <div class="help-item">
+                <strong>Pipeline</strong>
+                <p>Number of requests in flight per connection. Lower values help isolate latency.</p>
+              </div>
+              <div class="help-item">
+                <strong>Ratio</strong>
+                <p>Write:read mix. For 20% writes and 80% reads, memtier uses <code>1:4</code>.</p>
+              </div>
+              <div class="help-item">
+                <strong>Value size</strong>
+                <p>Controls payload size with <code>--data-size</code> or <code>--data-size-range</code>.</p>
+              </div>
+              <div class="help-item">
+                <strong>Key settings</strong>
+                <p>Use key min, key max, key pattern, and key prefix to shape the keyspace.</p>
+              </div>
+              <div class="help-item">
+                <strong>Percentiles</strong>
+                <p>Controls which latency percentiles appear in the summary table.</p>
+              </div>
+              <div class="help-item">
+                <strong>HDR prefix</strong>
+                <p>Saves histogram files for deeper latency analysis.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-box">
+          <h3>Generated Command</h3>
+          <pre id="commandOutput"></pre>
+          <div class="actions">
+            <button class="button primary" id="copyCommand">Copy</button>
+            <button class="button" id="copyOneLine">Copy One Line</button>
+          </div>
+          <div class="status" id="commandStatus"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewerTab" class="hidden">
+      <div class="panel">
+        <h2>Output Viewer</h2>
+        <p>Load raw memtier console output or an HDR histogram text file.</p>
+
+        <div class="upload-grid">
+          <div class="drop">
+            <label for="rawFile"><strong>Upload file</strong></label>
+            <input id="rawFile" type="file" accept=".txt,.log,.out,text/plain">
+            <div class="status" id="fileLabel">No file selected.</div>
+          </div>
+          <div class="drop">
+            <label for="rawPaste"><strong>Paste output</strong></label>
+            <textarea id="rawPaste" placeholder="Paste memtier output here"></textarea>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="button primary" id="parseButton">Parse</button>
+          <button class="button" id="clearButton">Clear</button>
+          <button class="button" id="exportJson">Export Parsed JSON</button>
+        </div>
+      </div>
+
+      <div id="viewerContent" class="hidden">
+        <div class="panel">
+          <h2>Summary</h2>
+          <div class="metrics" id="metrics"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Charts</h2>
+          <div class="charts">
+            <div class="chart">
+              <h3>Latency Percentiles</h3>
+              <div class="svg-wrap" id="percentileChart"></div>
+            </div>
+            <div class="chart">
+              <h3>Distribution</h3>
+              <div class="svg-wrap" id="distributionChart"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Parsed Table</h2>
+          <div id="statsTable"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const state = { rawText: "", parsed: null };
+
+    function byId(id) { return document.getElementById(id); }
+    function toNumber(value, fallback = 0) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : fallback;
+    }
+    function gcd(a, b) {
+      let x = Math.abs(a);
+      let y = Math.abs(b);
+      while (y) {
+        const t = y;
+        y = x % y;
+        x = t;
+      }
+      return x || 1;
+    }
+    function ratioFromPercents(writePercent, readPercent) {
+      if (writePercent === 0 && readPercent === 0) return "0:0";
+      const d = gcd(writePercent, readPercent);
+      return `${writePercent / d}:${readPercent / d}`;
+    }
+    function splitColumns(line) {
+      return line.trim().split(/\s{2,}/).map((s) => s.trim()).filter(Boolean);
+    }
+    function normalizeHeader(value) {
+      return value.toLowerCase()
+        .replace(/%/g, "pct")
+        .replace(/[^a-z0-9.]+/g, "_")
+        .replace(/\./g, "_")
+        .replace(/^_+|_+$/g, "")
+        .replace(/_+/g, "_");
+    }
+    function maybeNumber(value) {
+      if (value === "---" || value === "N/A" || value === "") return null;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+    function formatMetric(value, suffix = "", digits = 2) {
+      if (value === null || value === undefined || Number.isNaN(value)) return "N/A";
+      return `${Number(value).toLocaleString(undefined, {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      })}${suffix}`;
+    }
+
+    function buildCommand() {
+      const host = byId("host").value.trim() || "127.0.0.1";
+      const port = toNumber(byId("port").value, 6379);
+      const password = byId("password").value;
+      const protocol = byId("protocol").value;
+      const threads = toNumber(byId("threads").value, 4);
+      const clients = toNumber(byId("clients").value, 50);
+      const pipeline = toNumber(byId("pipeline").value, 1);
+      const testTime = toNumber(byId("testTime").value, 60);
+      const writePercent = toNumber(byId("writePercent").value, 20);
+      const readPercent = toNumber(byId("readPercent").value, 80);
+      const valueMode = byId("valueMode").value;
+      const avgValueSize = toNumber(byId("avgValueSize").value, 1024);
+      const valueDelta = toNumber(byId("valueDelta").value, 0);
+      const valuePattern = byId("valuePattern").value;
+      const keyMin = toNumber(byId("keyMin").value, 1);
+      const keyMax = toNumber(byId("keyMax").value, 1000000);
+      const keyPattern = byId("keyPattern").value;
+      const keyPrefix = byId("keyPrefix").value.trim();
+      const rateLimiting = toNumber(byId("rateLimiting").value, 0);
+      const percentiles = byId("percentiles").value.trim() || "50,80,90,95,99,99.9";
+      const hdrPrefix = byId("hdrPrefix").value.trim() || "redis_run_01";
+      const extraArgs = byId("extraArgs").value.trim();
+      const ratio = ratioFromPercents(writePercent, readPercent);
+
+      const lines = [
+        "memtier_benchmark \\",
+        `  -s ${host} \\`,
+        `  -p ${port} \\`,
+        `  --protocol=${protocol} \\`
+      ];
+
+      if (password) lines.push(`  --authenticate='${password.replaceAll("'", "'\\''")}' \\`);
+
+      lines.push(
+        `  -t ${threads} \\`,
+        `  -c ${clients} \\`,
+        `  --test-time=${testTime} \\`,
+        `  --pipeline=${pipeline} \\`,
+        `  --ratio=${ratio} \\`
+      );
+
+      if (valueMode === "range" && valueDelta > 0) {
+        const min = Math.max(1, avgValueSize - valueDelta);
+        const max = avgValueSize + valueDelta;
+        lines.push(
+          `  --data-size-range=${min}-${max} \\`,
+          `  --data-size-pattern=${valuePattern} \\`
+        );
+      } else {
+        lines.push(`  --data-size=${avgValueSize} \\`);
+      }
+
+      lines.push(
+        `  --key-minimum=${keyMin} \\`,
+        `  --key-maximum=${keyMax} \\`,
+        `  --key-pattern=${keyPattern} \\`
+      );
+
+      if (keyPrefix) lines.push(`  --key-prefix=${keyPrefix} \\`);
+
+      lines.push(
+        "  --distinct-client-seed \\",
+        "  --random-data \\",
+        "  --randomize \\"
+      );
+
+      if (rateLimiting > 0) lines.push(`  --rate-limiting=${rateLimiting} \\`);
+
+      lines.push(
+        `  --print-percentiles=${percentiles} \\`,
+        `  --hdr-file-prefix=${hdrPrefix}`
+      );
+
+      if (extraArgs) {
+        lines[lines.length - 1] += " \\";
+        lines.push(`  ${extraArgs}`);
+      }
+
+      const command = lines.join("\n");
+      byId("commandOutput").textContent = command;
+      byId("copyCommand").dataset.value = command;
+      byId("copyOneLine").dataset.value = command.replace(/\\\n\s*/g, " ");
+      byId("commandStatus").textContent = `Total connections: ${threads * clients}`;
+    }
+
+    function parseStatsTable(rawText) {
+      const lines = rawText.split(/\r?\n/);
+      const candidates = [];
+
+      for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i];
+        if (!line.trim().startsWith("Type") || !line.includes("Ops/sec")) continue;
+
+        const headers = splitColumns(line);
+        const normalized = headers.map(normalizeHeader);
+        const rows = [];
+
+        for (let j = i + 1; j < lines.length; j += 1) {
+          const current = lines[j].trim();
+          if (!current) break;
+          if (/^[-=]+$/.test(current) || current.startsWith("[RUN #")) continue;
+
+          const columns = splitColumns(lines[j]);
+          if (columns.length !== headers.length) {
+            if (rows.length) break;
+            continue;
+          }
+
+          const row = {};
+          headers.forEach((header, idx) => {
+            if (header === "Type") row.type = columns[idx];
+            else row[normalized[idx]] = maybeNumber(columns[idx]);
+          });
+          rows.push(row);
+        }
+
+        if (rows.length && rows.some((row) => row.type === "Totals")) candidates.push(rows);
+      }
+
+      if (!candidates.length) throw new Error("Could not find a memtier ALL STATS table in the supplied text.");
+      return candidates[candidates.length - 1];
+    }
+
+    function parseDistribution(rawText) {
+      const lines = rawText.split(/\r?\n/);
+      const start = lines.findIndex((line) => line.includes("Request Latency Distribution"));
+      if (start === -1) return {};
+
+      const series = {};
+      for (let i = start + 1; i < lines.length; i += 1) {
+        const line = lines[i].trim();
+        if (!line || /^[-=]+$/.test(line) || line.startsWith("Type") || line === "---") continue;
+        const match = line.match(/^([A-Z]+)\s+([\d.]+)\s+([\d.]+)$/);
+        if (!match) continue;
+        const [, type, latency, percent] = match;
+        if (!series[type]) series[type] = [];
+        series[type].push({ latency: Number(latency), percent: Number(percent) });
+      }
+      return series;
+    }
+
+    function parseHdrHistogram(rawText) {
+      const lines = rawText.split(/\r?\n/);
+      const start = lines.findIndex((line) => line.includes("Value") && line.includes("Percentile") && line.includes("TotalCount"));
+      if (start === -1) throw new Error("Could not find an HDR histogram table in the supplied text.");
+
+      const points = [];
+      for (let i = start + 1; i < lines.length; i += 1) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const match = line.match(/^([\d.]+)\s+([\d.]+)\s+(\d+)\s+([\d.]+|Infinity)$/);
+        if (!match) continue;
+        points.push({
+          value: Number(match[1]),
+          percentile: Number(match[2]),
+          totalCount: Number(match[3]),
+          inverseTail: match[4] === "Infinity" ? null : Number(match[4])
+        });
+      }
+
+      if (!points.length) throw new Error("HDR histogram header found, but no rows were parsed.");
+      return points;
+    }
+
+    function nearestHdrPercentile(points, target) {
+      const desired = target / 100;
+      let best = points[0];
+      let distance = Math.abs(points[0].percentile - desired);
+      for (const point of points) {
+        const current = Math.abs(point.percentile - desired);
+        if (current < distance) {
+          best = point;
+          distance = current;
+        }
+      }
+      return best;
+    }
+
+    function percentileSeriesFromTotals(totals) {
+      return Object.entries(totals)
+        .filter(([key, value]) => key.startsWith("p") && key.endsWith("_latency") && value !== null)
+        .map(([key, value]) => ({
+          label: key.slice(0, -8).replaceAll("_", ".").toUpperCase(),
+          percentile: Number(key.slice(1, -8).replaceAll("_", ".")),
+          value
+        }))
+        .sort((a, b) => a.percentile - b.percentile);
+    }
+
+    function buildParsed(rawText) {
+      try {
+        const rows = parseStatsTable(rawText);
+        return {
+          mode: "raw",
+          rows,
+          distribution: parseDistribution(rawText)
+        };
+      } catch (error) {
+        const points = parseHdrHistogram(rawText);
+        const last = points[points.length - 1];
+        const percentiles = [50, 80, 90, 95, 99, 99.9].map((value) => {
+          const match = nearestHdrPercentile(points, value);
+          return { label: `P${value}`, percentile: value, value: match.value };
+        });
+        return {
+          mode: "hdr",
+          rows: [{
+            type: "HDR Histogram",
+            total_samples: last.totalCount,
+            p50_latency: percentiles.find((p) => p.label === "P50")?.value ?? null,
+            p80_latency: percentiles.find((p) => p.label === "P80")?.value ?? null,
+            p90_latency: percentiles.find((p) => p.label === "P90")?.value ?? null,
+            p95_latency: percentiles.find((p) => p.label === "P95")?.value ?? null,
+            p99_latency: percentiles.find((p) => p.label === "P99")?.value ?? null,
+            p99_9_latency: percentiles.find((p) => p.label === "P99.9")?.value ?? null,
+            max_latency: last.value
+          }],
+          distribution: {
+            HDR: points.map((point) => ({ latency: point.value, percent: point.percentile * 100 }))
+          },
+          hdrPoints: points,
+          percentiles
+        };
+      }
+    }
+
+    function buildBarChart(items) {
+      if (!items.length) return "<p>No percentile data.</p>";
+      const width = 700;
+      const height = 300;
+      const left = 50;
+      const bottom = 40;
+      const top = 20;
+      const usableWidth = width - left - 20;
+      const usableHeight = height - top - bottom;
+      const maxValue = Math.max(...items.map((item) => item.value), 1);
+      const barWidth = usableWidth / items.length;
+
+      const bars = items.map((item, index) => {
+        const x = left + index * barWidth + 10;
+        const currentWidth = Math.max(barWidth - 20, 18);
+        const barHeight = (item.value / maxValue) * usableHeight;
+        const y = top + usableHeight - barHeight;
+        return `
+          <rect x="${x}" y="${y}" width="${currentWidth}" height="${barHeight}" rx="4" fill="${index % 2 === 0 ? "#0f766e" : "#2563eb"}"></rect>
+          <text x="${x + currentWidth / 2}" y="${height - 16}" text-anchor="middle" font-size="12" fill="#5b6773">${item.label}</text>
+          <text x="${x + currentWidth / 2}" y="${Math.max(14, y - 6)}" text-anchor="middle" font-size="12" fill="#18212b">${item.value.toFixed(3)}</text>
+        `;
+      }).join("");
+
+      return `
+        <svg viewBox="0 0 ${width} ${height}" width="100%" height="auto">
+          <line x1="${left}" y1="${top}" x2="${left}" y2="${height - bottom}" stroke="#94a3b8"></line>
+          <line x1="${left}" y1="${height - bottom}" x2="${width - 10}" y2="${height - bottom}" stroke="#94a3b8"></line>
+          ${bars}
+        </svg>
+      `;
+    }
+
+    function buildLineChart(seriesMap) {
+      const names = Object.keys(seriesMap).filter((key) => seriesMap[key].length);
+      if (!names.length) return "<p>No distribution data.</p>";
+
+      const width = 700;
+      const height = 300;
+      const left = 52;
+      const right = 20;
+      const top = 20;
+      const bottom = 42;
+      const usableWidth = width - left - right;
+      const usableHeight = height - top - bottom;
+      const allPoints = names.flatMap((name) => seriesMap[name]);
+      const maxLatency = Math.max(...allPoints.map((point) => point.latency), 1);
+      const colors = { GET: "#2563eb", SET: "#ea580c", HDR: "#0f766e", WAIT: "#64748b" };
+
+      const grid = [0, 25, 50, 75, 100].map((tick) => {
+        const x = left + (tick / 100) * usableWidth;
+        return `
+          <line x1="${x}" y1="${top}" x2="${x}" y2="${height - bottom}" stroke="rgba(148,163,184,0.18)"></line>
+          <text x="${x}" y="${height - 18}" text-anchor="middle" font-size="12" fill="#5b6773">${tick}%</text>
+        `;
+      }).join("");
+
+      const lines = names.map((name) => {
+        const points = seriesMap[name].map((point) => {
+          const x = left + (point.percent / 100) * usableWidth;
+          const y = top + usableHeight - (point.latency / maxLatency) * usableHeight;
+          return `${x},${y}`;
+        }).join(" ");
+        return `<polyline points="${points}" fill="none" stroke="${colors[name] || "#0f766e"}" stroke-width="3"></polyline>`;
+      }).join("");
+
+      return `
+        <svg viewBox="0 0 ${width} ${height}" width="100%" height="auto">
+          <line x1="${left}" y1="${top}" x2="${left}" y2="${height - bottom}" stroke="#94a3b8"></line>
+          <line x1="${left}" y1="${height - bottom}" x2="${width - right}" y2="${height - bottom}" stroke="#94a3b8"></line>
+          ${grid}
+          ${lines}
+        </svg>
+      `;
+    }
+
+    function renderMetrics(parsed) {
+      const rows = parsed.rows;
+      const totals = rows.find((row) => row.type === "Totals") || rows[rows.length - 1];
+      const items = parsed.mode === "hdr"
+        ? [
+            ["Samples", formatMetric(totals.total_samples, "", 0), "Latency samples"],
+            ["P50", formatMetric(totals.p50_latency, " ms", 3), "Median latency"],
+            ["P95", formatMetric(totals.p95_latency, " ms", 3), "Tail latency"],
+            ["P99", formatMetric(totals.p99_latency, " ms", 3), "Tail latency"],
+            ["P99.9", formatMetric(totals.p99_9_latency, " ms", 3), "Deep tail"],
+            ["Max", formatMetric(totals.max_latency, " ms", 3), "Maximum observed latency"],
+            ["Throughput", "N/A", "Not present in HDR file"],
+            ["Type", "HDR", "Histogram export"]
+          ]
+        : [
+            ["Throughput", formatMetric(totals.ops_sec, " ops/sec"), "Totals row"],
+            ["Avg Latency", formatMetric(totals.avg_latency, " ms", 3), "Totals row"],
+            ["P95", formatMetric(totals.p95_latency, " ms", 3), "Tail latency"],
+            ["P99", formatMetric(totals.p99_latency, " ms", 3), "Tail latency"],
+            ["Hits/sec", formatMetric(totals.hits_sec), "Read hits"],
+            ["Misses/sec", formatMetric(totals.misses_sec), "Read misses"],
+            ["KB/sec", formatMetric(totals.kb_sec), "Transfer rate"],
+            ["Type", "RAW", "Console output"]
+          ];
+
+      byId("metrics").innerHTML = items.map(([label, value, note]) => `
+        <div class="metric">
+          <span>${label}</span>
+          <strong>${value}</strong>
+          <small>${note}</small>
+        </div>
+      `).join("");
+    }
+
+    function renderTable(rows) {
+      const headers = ["type", ...Object.keys(rows[0]).filter((key) => key !== "type")];
+      const table = `
+        <table>
+          <thead>
+            <tr>${headers.map((header) => `<th>${header.replaceAll("_", " ")}</th>`).join("")}</tr>
+          </thead>
+          <tbody>
+            ${rows.map((row) => `
+              <tr>
+                ${headers.map((header) => {
+                  const value = row[header];
+                  return `<td>${value === null || value === undefined ? "---" : (typeof value === "number" ? value.toFixed(3) : value)}</td>`;
+                }).join("")}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+      byId("statsTable").innerHTML = table;
+    }
+
+    function renderParsed(parsed) {
+      state.parsed = parsed;
+      renderMetrics(parsed);
+      renderTable(parsed.rows);
+      const totals = parsed.rows.find((row) => row.type === "Totals") || parsed.rows[parsed.rows.length - 1];
+      const percentileData = parsed.mode === "hdr"
+        ? parsed.percentiles
+        : percentileSeriesFromTotals(totals);
+      byId("percentileChart").innerHTML = buildBarChart(percentileData);
+      byId("distributionChart").innerHTML = buildLineChart(parsed.distribution);
+      byId("viewerContent").classList.remove("hidden");
+      byId("exportJson").dataset.value = JSON.stringify(parsed, null, 2);
+    }
+
+    async function copyText(value, status) {
+      try {
+        await navigator.clipboard.writeText(value);
+        byId("commandStatus").textContent = status;
+      } catch {
+        byId("commandStatus").textContent = "Copy failed. Copy manually.";
+      }
+    }
+
+    function downloadFile(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function bindTabs() {
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".tab").forEach((item) => item.classList.remove("active"));
+          tab.classList.add("active");
+          byId("builderTab").classList.toggle("hidden", tab.dataset.tab !== "builder");
+          byId("viewerTab").classList.toggle("hidden", tab.dataset.tab !== "viewer");
+        });
+      });
+    }
+
+    function bindBuilder() {
+      [
+        "host", "port", "password", "protocol", "threads", "clients", "pipeline", "testTime",
+        "writePercent", "readPercent", "valueMode", "avgValueSize", "valueDelta", "valuePattern",
+        "keyMin", "keyMax", "keyPattern", "keyPrefix", "rateLimiting", "percentiles", "hdrPrefix", "extraArgs"
+      ].forEach((id) => {
+        byId(id).addEventListener("input", buildCommand);
+        byId(id).addEventListener("change", buildCommand);
+      });
+
+      byId("copyCommand").addEventListener("click", () => copyText(byId("copyCommand").dataset.value || "", "Command copied."));
+      byId("copyOneLine").addEventListener("click", () => copyText(byId("copyOneLine").dataset.value || "", "One-line command copied."));
+      buildCommand();
+    }
+
+    function bindViewer() {
+      byId("rawFile").addEventListener("change", async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) {
+          byId("fileLabel").textContent = "No file selected.";
+          return;
+        }
+        state.rawText = await file.text();
+        byId("fileLabel").textContent = file.name;
+      });
+
+      byId("parseButton").addEventListener("click", () => {
+        const text = byId("rawPaste").value.trim() || state.rawText.trim();
+        if (!text) {
+          alert("Load or paste memtier output first.");
+          return;
+        }
+        try {
+          renderParsed(buildParsed(text));
+        } catch (error) {
+          alert(error.message);
+        }
+      });
+
+      byId("clearButton").addEventListener("click", () => {
+        byId("rawPaste").value = "";
+        byId("fileLabel").textContent = "No file selected.";
+        state.rawText = "";
+        state.parsed = null;
+        byId("viewerContent").classList.add("hidden");
+      });
+
+      byId("exportJson").addEventListener("click", () => {
+        const value = byId("exportJson").dataset.value;
+        if (!value) {
+          alert("Parse output first.");
+          return;
+        }
+        downloadFile("memtier-parsed.json", value, "application/json");
+      });
+    }
+
+    bindTabs();
+    bindBuilder();
+    bindViewer();
+  </script>
+</body>
+</html>
