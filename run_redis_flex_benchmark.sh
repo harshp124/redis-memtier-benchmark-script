@@ -37,6 +37,10 @@ SUBSET_KEY_MAX=12500000
 DATA_SIZE_BYTES=4096
 
 # Load phase
+# If true, run the initial full write-only data load.
+# Set this to false only after a known successful full load.
+# If a previous load was interrupted or you are unsure whether it finished, keep this as true.
+ENABLE_INITIAL_LOAD=true
 # Number of memtier worker threads used only during the initial write-only load.
 LOAD_THREADS=8
 # Number of connections opened per load-phase thread.
@@ -47,6 +51,8 @@ LOAD_PIPELINE=32
 # Warmup phase
 # If true, touch the focused subset before measured benchmarks begin.
 ENABLE_WARMUP=true
+# Length of the warmup phase in seconds. Warmup is read-only and uses random keys within the subset.
+WARMUP_TIME_SECONDS=60
 # Number of memtier worker threads used during warmup.
 WARMUP_THREADS=4
 # Number of connections opened per warmup thread.
@@ -187,7 +193,9 @@ DATA_SIZE_BYTES=${DATA_SIZE_BYTES}
 LOAD_THREADS=${LOAD_THREADS}
 LOAD_CLIENTS=${LOAD_CLIENTS}
 LOAD_PIPELINE=${LOAD_PIPELINE}
+ENABLE_INITIAL_LOAD=${ENABLE_INITIAL_LOAD}
 ENABLE_WARMUP=${ENABLE_WARMUP}
+WARMUP_TIME_SECONDS=${WARMUP_TIME_SECONDS}
 WARMUP_THREADS=${WARMUP_THREADS}
 WARMUP_CLIENTS=${WARMUP_CLIENTS}
 WARMUP_PIPELINE=${WARMUP_PIPELINE}
@@ -211,24 +219,28 @@ log "Configuration snapshot: ${RUN_DIR}/run_config.txt"
 # Phase 1: Full load
 #######################################
 
-run_memtier_to_file \
-  "Phase 1: load full dataset" \
-  "${RUN_DIR}/01_load_full.raw.txt" \
-  "" \
-  -t "${LOAD_THREADS}" \
-  -c "${LOAD_CLIENTS}" \
-  --pipeline="${LOAD_PIPELINE}" \
-  --ratio=1:0 \
-  --key-prefix="${KEY_PREFIX}" \
-  --key-minimum="${FULL_KEY_MIN}" \
-  --key-maximum="${FULL_KEY_MAX}" \
-  --key-pattern=P:P \
-  --data-size="${DATA_SIZE_BYTES}" \
-  --distinct-client-seed \
-  --random-data \
-  --randomize \
-  --requests=allkeys \
-  --hide-histogram
+if [[ "${ENABLE_INITIAL_LOAD}" == "true" ]]; then
+  run_memtier_to_file \
+    "Phase 1: load full dataset" \
+    "${RUN_DIR}/01_load_full.raw.txt" \
+    "" \
+    -t "${LOAD_THREADS}" \
+    -c "${LOAD_CLIENTS}" \
+    --pipeline="${LOAD_PIPELINE}" \
+    --ratio=1:0 \
+    --key-prefix="${KEY_PREFIX}" \
+    --key-minimum="${FULL_KEY_MIN}" \
+    --key-maximum="${FULL_KEY_MAX}" \
+    --key-pattern=P:P \
+    --data-size="${DATA_SIZE_BYTES}" \
+    --distinct-client-seed \
+    --random-data \
+    --randomize \
+    --requests=allkeys \
+    --hide-histogram
+else
+  log "Phase 1: initial full load skipped"
+fi
 
 #######################################
 # Phase 2: Warmup
@@ -243,12 +255,12 @@ if [[ "${ENABLE_WARMUP}" == "true" ]]; then
     -c "${WARMUP_CLIENTS}" \
     --pipeline="${WARMUP_PIPELINE}" \
     --ratio=0:1 \
+    --test-time="${WARMUP_TIME_SECONDS}" \
     --key-prefix="${KEY_PREFIX}" \
     --key-minimum="${SUBSET_KEY_MIN}" \
     --key-maximum="${SUBSET_KEY_MAX}" \
     --key-pattern=R:R \
     --data-size="${DATA_SIZE_BYTES}" \
-    --requests=allkeys \
     --hide-histogram
 else
   log "Phase 2: warmup skipped"

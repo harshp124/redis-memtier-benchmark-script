@@ -69,6 +69,7 @@ Edit:
 - Redis host
 - Redis port
 - Redis password
+- whether to run the initial full data load
 - key ranges
 - data size
 - load, warmup, and benchmark concurrency
@@ -99,11 +100,31 @@ chmod +x run_redis_flex_benchmark.sh
 
 The phases stop automatically:
 
-- load phase ends when memtier has covered the configured key range
-- warmup phase ends when memtier has touched the configured subset
+- load phase ends when memtier has covered the configured key range, if `ENABLE_INITIAL_LOAD=true`
+- warmup phase ends after the configured warmup duration
 - measured benchmarks end after the configured `BENCHMARK_TIME_SECONDS`
 
 You do not need to manually stop the script unless you want to abort early.
+
+If you are rerunning benchmarks against data that is already loaded, set:
+
+```bash
+ENABLE_INITIAL_LOAD=false
+```
+
+at the top of `run_redis_flex_benchmark.sh` to skip the initial load phase.
+
+Important:
+
+- Only set `ENABLE_INITIAL_LOAD=false` after a known successful full load.
+- If a previous load was interrupted, failed, or you are unsure whether it completed, set `ENABLE_INITIAL_LOAD=true` and run the load phase again.
+- If you skip the load after a partial load, later benchmark results may be misleading because only part of the expected keyspace may exist.
+
+Warmup behavior:
+
+- Warmup is read-only
+- Warmup uses random key access within the configured benchmark subset
+- Warmup runs for the configured `WARMUP_TIME_SECONDS` instead of trying to sweep the entire subset
 
 ### 5. Collect the generated output folder
 
